@@ -6,12 +6,22 @@ SynthDef(\hihat,
 	arg amp = 1, pan = 0;
 	Out.ar(0, Pan2.ar(
 			HPF.ar(WhiteNoise.ar(0.2 * amp), Rand(800, 10000)) *
-			EnvGen.kr(Env.adsr(0.02, 0, 0, 0, 1), doneAction: Done.freeSelf),
+			Line.kr(0, 1, 0.04, doneAction: Done.freeSelf),
 		pan
 		))
 	}
 ).add;
 
+)
+
+
+Synth(\hihat)
+
+Synth(\kick)
+
+Synth(\snare)
+
+(
 
 SynthDef(\kick,
 	{
@@ -23,7 +33,9 @@ SynthDef(\kick,
 	}
 ).add;
 
+)
 
+(
 SynthDef(\snare,
 {
 	arg amp = 1, pan = 0;
@@ -32,7 +44,9 @@ SynthDef(\snare,
 	click = { LPF.ar(WhiteNoise.ar(1 * amp), 1500) * Line.kr(1, 0, 0.09) };
 		Out.ar(0, Pan2.ar(click + snare, pan));
 }).add;
+)
 
+(
 
 ~hatAmps = [ 0, 0, 0.6, 1, 0, 0, 1, 0, 0, 0, 0.6, 1, 0, 1, 0, 0.6 ];
 ~hatPans = [ -0.8, 0.7, -0.6, 0.5, -0.4, 0.3, -0.2, 0.1, 0, -0.1, 0.2, -0.3, 0.4, -0.5, 0.6, -0.7 ];
