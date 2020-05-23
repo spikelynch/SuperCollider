@@ -57,6 +57,7 @@ SynthDef(\snare,
 ~kickAmps = [ 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0,0.6 ];
 
 
+
 Pbind(
 	\instrument, \hihat,
 	\dur, 1/8,
