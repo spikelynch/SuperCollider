@@ -16,7 +16,7 @@ SynthDef(\fm, {
 
 
 // nice bass
-Synth(\fm, [\freq: 43.midicps, \atk: 0.05, \rel: 1.5, \index:2, \iScale:2,\cRatio:4, \mRatio:1.2, \amp: 0.1])
+Synth(\fm, [\freq: 110, \atk: 0, \rel: 1.2, \index:1, \iScale:5,\cRatio:1, \mRatio:0.25, \amp: 0.5])
 
 
 
