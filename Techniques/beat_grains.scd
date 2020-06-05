@@ -50,14 +50,9 @@ SynthDef(\snare,
 ~kickAmps =  [ 1,   0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0 ];
 ~snareAmps = [ 0,   0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0 ];
 
-~grainAmps = [ 1,   0, 0, 0, 0, 0, 1, 0 ,0,  0, 0, 0, 1, 0, 0, 0 ];
-~grainPos =  [ 0,   0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0.6, 0, 0, 0 ];
-
+~grainAmps = [ 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0, 2, 0 ];
 
 ~tc = TempoClock(90/120);
-
-~recorder = Synth(\recordIn, [ \bufnum, b ]);
-
 
 Pbind(
 	\instrument, \hihat,
@@ -74,39 +69,40 @@ Pbind(
 ).play(~tc);
 
 Pbind(
-	\instrument, \snare,
-	\dur, 1/8,
-	\amp, 0.5 * Pseq(~snareAmps, inf)
-).play(~tc);
-
-Pbind(
 	\instrument, \grains,
 	\dur, 1/8,
+	\release, 1,
 	\bufnum, b,
-	\amp, 4 * Pseq(~grainAmps, inf),
-	\pos, Pseq(~grainPos, inf)
-).play(~tc)
+	\amp, Pseq(~grainAmps, inf),
+	\pos, Pseq([Pshuf([0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.825])], inf)
+).play(~tc);
 
 
 )
 
+Pseq([Pshuf([1,2, 3, 4])], inf).asStream.nextN(10)
 
 
 
 
+
+Server.default.options.inDevice_("Scarlett 2i2 USB")
 
 
 // grain sample buffer
 
 (
-b = Buffer.alloc(s, s.sampleRate * 4.0, 1);
+b = Buffer.alloc(s, s.sampleRate * 2.166666, 1);
 )
+
+b.free;
+b.plot
 
 
 // record USB input to the sample buffer loop
 (
 SynthDef(\recordIn, { arg in = 2, out = 0, bufnum = 0;
-	RecordBuf.ar(In.ar(in, 1), bufnum, 0, 0.25, 0.75, loop: 1)
+	RecordBuf.ar(In.ar(in, 1), bufnum, 0, 0.5, 0.5, loop: 1)
 }).add;
 
 )
@@ -116,8 +112,9 @@ SynthDef(\recordIn, { arg in = 2, out = 0, bufnum = 0;
 // granular synth -
 (
 SynthDef(\grains, {
-	arg out = 0, bufnum = 0, trate = 8, pos = 0.5, amp = 1.0, attack = 0.01, release = 0.5, pan = 0;
+	arg out = 0, bufnum = 0, pos = 0.5, amp = 1.0, attack = 0.01, release = 0.5, pan = 0;
     var dur, blen, clk, env;
+    trate = MouseY.kr(8,120,1);
     dur = 12 / trate;
     clk = Impulse.kr(trate);
 	blen = BufDur.kr(bufnum);
@@ -126,23 +123,13 @@ SynthDef(\grains, {
 }).add;
 )
 
-~recorder = Synth(\recordIn, [ \bufnum, b ])
+// passthrough
 
+{ Out.ar(0, In.ar(2) ! 2) }.play
+
+~recorder = Synth(\recordIn, [ \in, 2, \bufnum, b ], addAction: \addToTail)
+~recorder.free;
 Synth(\grains, [ \bufnum, b ])
 
-b.free;
 
 
-(
-~grainAmps = [ 1,   0, 0, 0, 0, 0, 1, 0 ,0,  0, 0, 0, 1, 0, 0, 0 ];
-~grainPos =  [ 0,   0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 0.6, 0, 0, 0 ];
-~tc = TempoClock(90/120);
-
-Pbind(
-	\instrument, \grains,
-	\dur, 1/8,
-	\bufnum, b,
-	\amp, 2 * Pseq(~grainAmps, inf),
-	\pos, Pseq(~grainPos, inf)
-).play(~tc)
-)

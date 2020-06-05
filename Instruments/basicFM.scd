@@ -1,6 +1,6 @@
 (
 SynthDef(\fm, {
-	arg freq=500, mRatio=1, cRatio=1, index=1, iScale=5,
+	arg out=0, freq=500, mRatio=1, cRatio=1, index=1, iScale=5,
 	amp=0.2, atk=0.01, rel=3, pan=0;
 	var car, mod, env, iEnv;
 	env = EnvGen.kr(Env.perc(atk, rel), doneAction:2);
@@ -8,7 +8,7 @@ SynthDef(\fm, {
 	mod = SinOsc.ar(freq * mRatio, mul:freq * mRatio * iEnv);
 	car = SinOsc.ar(freq * cRatio + mod) * env * amp;
 	car = Pan2.ar(car, pan);
-	Out.ar(0, car);
+	Out.ar(out, car);
 }).add;
 )
 
@@ -80,7 +80,7 @@ keys = Array.newClear(128);
 		node.release;
 		keys.put(num, nil);
 	});
-	node = Synth.tail(nil, "fmmouse", [\freq, num.midicps, \amp, vel/127, \atk: 0.03, \rel: 0.6, \index: 2]);
+	node = Synth.head(nil, "fm", [\out: 4, \freq, num.midicps, \amp, vel/127, \atk: 0.03, \rel: 0.6, \index: 2]);
 	keys.put(num, node);
 	[chan,num,vel/127].postln;
 };
@@ -98,7 +98,9 @@ MIDIIn.addFuncTo(\noteOff, ~noteOffFunc);
 
 )
 
+
 (
 MIDIIn.removeFuncFrom(\noteOn, ~noteOnFunc);
 MIDIIn.removeFuncFrom(\noteOff, ~noteOffFunc);
 )
+

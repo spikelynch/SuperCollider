@@ -36,9 +36,9 @@ SynthDef(\test, { | out, freq = 440, amp = 0.1, nharms = 10, pan = 0, gate = 1 |
 )
 
 
-Pbind(\instrument, \test, \freq, (Pfunc(f, inf) + 40).midicps , \dur, 1/8).play;
+Pbind(\instrument, \test, \degree, Pfunc(f, inf)  - 4 , \dur, 1/4).play;
 
-m = 30;
+m = 17;
 
 f
 
