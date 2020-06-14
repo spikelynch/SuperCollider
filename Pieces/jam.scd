@@ -38,8 +38,6 @@ SynthDef(\reverb,
 	}
 ).add;
 
-)
-(
 
 SynthDef(\breath,
 	{
@@ -50,13 +48,7 @@ SynthDef(\breath,
 		filtered = BPF.ar(noise, filt, rq);
 		Out.ar(out, Pan2.ar( env *filtered,pan));
 }).add;
-)
 
-Synth(\breath, [\amp, 0.3, \filt, 600, \atk, 1])
-
-Synth(\lead, [\detune, 0.002, \amp, 0.2])
-
-(
 SynthDef(\lfok,
 	{
 		arg out=6,freq=0.5, mul=100, add=800;
@@ -150,7 +142,7 @@ Pbind(
 	\instrument, \breath,
 	\filt, Pwhite(5000,10000,inf),
 	\dur, Pseq([1/16, Rest(1/16)], inf),
-	\amp, Pfunc(~fibomaker.value(19), inf) / 40,
+	\amp, Pfunc(~fibomaker.value(190), inf) / 400,
 	\rel, 0.2,
 	\atk, 0
 ).play(~clock);

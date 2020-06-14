@@ -28,25 +28,25 @@ SynthDef(\sinwobble, {
 
 ~wobbleLFO = MIDIFunc.cc({
 	|value, channel|
-	[ value, channel ].postln
+	[ value, channel ].postln;
 	~wobbler.set(\lfo, 40 * value / 127);
 }, 21);
 
 ~wobbleFreq = MIDIFunc.cc({
 	|value, channel|
-	[ value, channel ].postln
+	[ value, channel ].postln;
 	~wobbler.set(\freq, 3 * value + 440);
 }, 22);
 
 ~wobbleFiltamp = MIDIFunc.cc({
 	|value, channel|
-	[ value, channel ].postln
+	[ value, channel ].postln;
 	~wobbler.set(\filtamp, 3 * value + 200);
 }, 23);
 
 ~wobbleRes = MIDIFunc.cc({
 	|value, channel|
-	[ value, channel ].postln
+	[ value, channel ].postln;
 	~wobbler.set(\rq, value / 127);
 }, 24);
 
