@@ -1,3 +1,7 @@
+
+// note - I learnt today that sustain should be called 'sustain' to work properly
+// with Pbind, but when I changed the parameters to that I liked the piece less
+
 (
 SynthDef(\fmperc, {
 	arg out=0, freq=500, mRatio=1, cRatio=1, index=1, iScale=5,

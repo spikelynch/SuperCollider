@@ -62,20 +62,26 @@ G: then just pads                    (16)
 ~bassDurs = Pseq([Pseq([Pseq(~bassDursA, 4), Pseq(~bassDursB, 4)], 3), Pseq(~bassDursA, 4)]);
 
 
+~leadDurs = Pseq([ Rest(3/8), 1/8, 4/8, 1/8, 5/8, 1/8, 4/8, Rest(13/8) ], 8);
+~leadMidi = Pseq([ Rest(),    55,  55,  53,  53,  48, 48,    Rest() ],    8);
+~leadIscale = Pseq([ Rest(),    12,  15,  13,  18,  16, 20,    Rest()],   8);
+
 // filter modulation
+
 ~filtminA = 300;
 ~filtmaxA = 1000;
 
-~filtminB = 300;
-~filtmaxB = 1200;
 
-~filtminC = 500;
+~filtminB = 300;
+~filtmaxB = 1000;
+
+~filtminC = 300;
 ~filtmaxC = 1500;
 
-~filtminD = 700;
-~filtmaxD = 2500;
+~filtminD = 300;
+~filtmaxD = 5000;
 
-~filtminE = 400;
+~filtminE = 300;
 ~filtmaxE = 2000;
 
 ~filtminF = 300;
@@ -97,6 +103,24 @@ Pbind(
 	\iScale, 7,
 	\cRatio, 1,
 	\mRatio, 0.25
+).play(~tc);
+
+
+
+// lead; Rest(~lenA + ~lenB + ~lenC + ~lenD)
+
+Pbind(
+	\instrument, \fmperc,
+	\out, ~padFilterBus,
+	\dur,      Pseq([ Rest(~lenA + ~lenB + ~lenC + ~lenD), ~leadDurs]),
+	\midinote, Pseq([ Rest(~lenA + ~lenB + ~lenC + ~lenD), ~leadMidi]),
+	\amp,      0.04,   // crescendo
+	\index, 1,
+	\iScale,   Pseq([ Rest(~lenA + ~lenB + ~lenC + ~lenD), ~leadIscale]),
+	\mRatio, 3,
+	\cRatio, 2,
+	\atk, 0.0,
+	\rel, 2,
 ).play(~tc);
 
 
@@ -139,14 +163,13 @@ Pbind(
 	\dur, Pseq([Rest(~lenA), Pseq([4],inf)]),
 	\midinote, Pseq([Rest(~lenA), Pseq([~padMidi], (~lenB + ~lenC + ~lenD + ~lenE + ~lenF + ~lenG) / 16)]),
 	\mRatio, 2,
-	\cRatio, Pseq([
-		Rest(~lenA),
-		Pseq([ 3 ] , (~lenB + ~lenC) / 4),
-		Pwhite(2.9, 3.1, ~lenD / 4),
-		Pwhite(2.5, 3.5, ~lenE / 4),
-		Pwhite(2.9, 3.1, ~lenF / 4),
-		Pseq([3], ~lenG / 4)
-	]),
+	\cRatio, 3,
+	// Pseq([
+	// 	Rest(~lenA),
+	// 	Pseq([ 3 ] , (~lenB + ~lenC + ~lenD) / 4),
+	// 	Pseq([Pwhite(2.9, 3.1)], (~lenE + ~lenF) / 4),
+	// 	Pseq([Pwhite(2.8, 3.2)], ~lenG / 4)
+	// ]),
 	\index, 1,
 	\iScale, 4,
 	\atk, 2,
@@ -202,10 +225,11 @@ Pbind(
 
 //{ Out.ar(0, In.ar(~delayBus)) }.play;
 
-~delay = Synth(\stereodelay, [\in, ~delayBus, \out, 0, \delay, 1/8, \decay, 4, \mix, 1], addAction:\addToTail);
+~delay = Synth(\stereodelay, [\in, ~delayBus, \out, 0, \delay, 1/3, \decay, 4, \mix, 1], addAction:\addToTail);
 
 
 
 
 )
 
+3 + 1 + 4 + 1 + 5 + 1 + 4 + 13
