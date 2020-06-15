@@ -2,7 +2,7 @@
 //spare parts
 
 
-
+(
 Pbind(
 	\instrument, \fmsus,
 	\out, 6,
@@ -12,3 +12,4 @@ Pbind(
 	\mRatio, 2,
 	\pan, Pwhite(-0.3,0.3, inf)
 ).play(~tc);
+)
