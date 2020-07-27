@@ -45,15 +45,16 @@ MIDIFunc.noteOn({
 	var i = note - 60, node;
 	node = ~keys.at(i);
 	if( node.notNil, { ~keys.put(i, nil); });
-	node = Synth.head(nil, \clinker_dust, [
-		\out, 0,
+	note.postln;
+	node = Synth.head(nil, \clinker_ii, [
+		\out, ~keyboardbus,
 		\dust, 2000,
 		\freq, note.midicps,
 		\amp, vel/127,
-		\harmonic, ~kharmonic,
-		\partials, ~kpartials,
-		\rel, ~krelease,
-		\cutoff, ~kcutoff,
+		\harmonic, 3.1102362204724,
+		\partials, 0.18897637795276,
+		\rel, 3.03125,
+		\cutoff, 3700,
 		\atk, 0.01,
 		\pan, (i - 13) / 30
 	]);
@@ -64,16 +65,17 @@ MIDIFunc.noteOn({
 	var i = ~padmap.at(pad - 36), note = i + 36, node;
 	node = ~pads.at(i);
 	if( node.notNil, { ~pads.put(i, nil); });
-	node = Synth.head(nil, \clinker_dust, [
-		\out, 0,
+	note.postln;
+	node = Synth.head(nil, \clinker_ii, [
+		\out, ~keyboardbus,
 		\dust, 2000,
 		\freq, note.midicps,
 		\amp, vel/127,
 
-		\harmonic, ~pharmonic,
-		\partials, ~ppartials,
-		\rel, ~prelease,
-		\cutoff, ~pcutoff,
+		\harmonic, 1.3464566929134,
+		\partials, 0.50393700787402,
+		\rel, 3.625,
+		\cutoff, 3300,
 
 		\atk, 0.01,
 		\pan, (i - 8) / 16

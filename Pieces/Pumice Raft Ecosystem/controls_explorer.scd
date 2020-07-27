@@ -1,5 +1,7 @@
 
 
+// this is the first version of this file, which I used for
+// exploring the parameter space of the clinker synth
 
 
 (
@@ -45,9 +47,8 @@ MIDIFunc.noteOn({
 	var i = note - 60, node;
 	node = ~keys.at(i);
 	if( node.notNil, { ~keys.put(i, nil); });
-	node = Synth.head(nil, \clinker_dust, [
-		\out, 0,
-		\dust, 2000,
+	node = Synth.head(nil, \clinker_ii, [
+		\out, ~keyboardbus,
 		\freq, note.midicps,
 		\amp, vel/127,
 		\harmonic, ~kharmonic,
@@ -64,17 +65,14 @@ MIDIFunc.noteOn({
 	var i = ~padmap.at(pad - 36), note = i + 36, node;
 	node = ~pads.at(i);
 	if( node.notNil, { ~pads.put(i, nil); });
-	node = Synth.head(nil, \clinker_dust, [
-		\out, 0,
-		\dust, 2000,
+	node = Synth.head(nil, \clinker_ii, [
+		\out, ~keyboardbus,
 		\freq, note.midicps,
 		\amp, vel/127,
-
 		\harmonic, ~pharmonic,
 		\partials, ~ppartials,
 		\rel, ~prelease,
 		\cutoff, ~pcutoff,
-
 		\atk, 0.01,
 		\pan, (i - 8) / 16
 	]);
@@ -84,7 +82,6 @@ MIDIFunc.noteOn({
 )
 
 [ ~kharmonic, ~kpartials, ~krelease, ~kcutoff ]
-
 
 
 [ ~pharmonic, ~ppartials, ~prelease, ~pcutoff ]
