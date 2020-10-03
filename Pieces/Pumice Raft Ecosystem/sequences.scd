@@ -5,18 +5,16 @@
 
 
 (
-~subbass.stop;
-~bell.stop;
+~bass.stop;
 ~woodblock.stop;
-~shaker.stop;
 )
+
 
 
 ~kharmonic.postln
 
 
-
-// TODO: better sequences!
+~wamp
 
 (
 
@@ -28,32 +26,42 @@
 // 	\dur, Pseq([0.5, 0.5, Rest(1)], inf),
 // 	\midinote, Pseq([100], inf),
 // 	\amp, 0.1,
+
 // 	\harmonics, 3.9291338582677,
 // 	\partials, Pwhite(0.1, 0.4, inf),//  0.10236220472441,
 // 	\rel, 1.125,
 // 	\cutoff, 9300
 // ).play(~tc);
 
-// how to route the controls to this?
 
 ~woodblock = Pbind(
  	\instrument, \clinker_ii,
 	\out, ~keyboardbus,
 	\dur,      Pseq([1/4, Rest(1/4), 1/4, 1/4, 1/4, 1/4], inf),
 	\midinote, Pseq([60, Rest(), 65, 63, 67, 70], inf),
-	\amp, 0.45,
-	\harmonic, Pfunc( { ~kharmonic} ),
-	\partials, Pfunc( { ~kpartials} ),
-	\rel, Pfunc( { ~krelease }),
-	\cutoff, Pfunc( { ~kcutoff }),
+	\amp,      Pfunc( { ~wamp } ),
+	\harmonic, Pfunc( { ~wharmonic} ),
+	\partials, Pfunc( { ~wpartials} ),
+	\rel,      Pfunc( { ~wrel }),
+	\cutoff,   Pfunc( { ~wcutoff }),
 
-
-	// \harmonics, 3.0787401574803,
-	// \partials, 0.59842519685039,
-	// \rel, 0.8125,
-	// \cutoff, 800,
 	\pan, Pseq([-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4], inf)
 ).play(~tc);
+
+~bass = Pbind(
+ 	\instrument, \clinker_ii,
+	\out, ~keyboardbus,
+	\dur,      Pseq([1/6, 1/6, 1/6, 1/6], inf),
+	\midinote, Pseq([30, 31, 32, 33], inf),
+	\amp,      Pfunc( { ~bamp } ),
+	\harmonic, Pfunc( { ~bharmonic } ),
+	\partials, Pfunc( { ~bpartials } ),
+	\rel,      Pfunc( { ~brel }),
+	\cutoff,   Pfunc( { ~bcutoff }),
+
+	\pan, Pseq([-0.3, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4], inf)
+).play(~tc);
+
 
 )
 
@@ -127,6 +135,8 @@
 )
 
 (
+~subbass.stop;
+~bell.stop;
 ~lead.stop;
 ~volcano.stop;
 )

@@ -13,6 +13,7 @@
 
 
 
+
 // this now takes a stereo bus and mixes it down to one channel
 // for the buffer
 
@@ -228,6 +229,9 @@ Synth(\passthrough_stereo, [\out, 0, \in, ~keyboardbus, \amp, 0.1]);
 }.play;
 
 
+
+
+
 )
 
 
@@ -252,14 +256,6 @@ Synth(\passthrough_stereo, [\out, 0, \in, ~keyboardbus, \amp, 0.1]);
 )
 
 
-(
-// change freqs and ringtimes with mouse
-{    var freqs, ringtimes;
-    freqs = [800, 1071, 1153, 1723] * MouseX.kr(0.5, 2, 1);
-    ringtimes = [1, 1, 1, 1] * MouseY.kr(0.1, 10, 1);
-    DynKlank.ar(`[freqs, nil, ringtimes ], Impulse.ar(2, 0, 0.1))
-}.play;
-)
 
 
 pi
