@@ -9,7 +9,19 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
+
 (
+
+// audio buses
+
+// recordb = input to bufrecorder
+// granulatorb = output from granulator
+
+~recordb = Bus.audio(s, 1);
+
+~granulatorb = Bus.audio(s, 2);
+
+
 
 ~buflength = 4.0;
 
@@ -19,6 +31,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // todo: feedback (play some of the granulator back into the buffer)
 
+// out isn't used for anything her
 
 ~bufrecorder = SynthDef(
 	\fripp_record,
@@ -96,7 +109,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // todo - different styles of trigger
 
-~grainout = Bus.audio(s, 2);
 
 
 ~granulator = SynthDef(
@@ -111,38 +123,34 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 		pan = WhiteNoise.kr(0.6);
 		Out.ar(out, RLPF.ar(TGrains.ar(2, clk, buffer, rate, pos, dur, pan, amp), freq,rq));
 	}
-).play(s, [\out, 0, \buffer, ~frippbuffer, \posb, ~grainsawb]);
+).play(s, [\out, ~granulatorb, \buffer, ~frippbuffer, \posb, ~grainsawb]);
 
-~filter = SynthDef(
-	\outputfilt,
-	{
-		arg in=2, out=0, mix=0.0, freq=400, rq=0.5, amp=0.5;
-		//Out.ar(out, RLPF.ar(In.ar(in, 2), freq, rq, amp));
-		Out.ar(out, In.ar(in, 2));
-}).play(s, [\in, ~grainout, \out, 0]);
+// ~filter = SynthDef(
+// 	\outputfilt,
+// 	{
+// 		arg in=2, out=0, mix=0.0, freq=400, rq=0.5, amp=0.5;
+// 		//Out.ar(out, RLPF.ar(In.ar(in, 2), freq, rq, amp));
+// 		Out.ar(out, In.ar(in, 2));
+// }).play(s, [\in, ~grainout, \out, 0]);
 
-~passthrough = SynthDef(
-	\passthrough_synth,
+~mixer = SynthDef(
+	\mixer_synth,
 	{
-		arg in = 2, out = 0, amp = 0.0;
-		Out.ar(out, amp * In.ar(2, 1) ! 2);
+		arg in = 2, gbus = 4, out = 0, amp = 1.0, passthrough = 0.0;
+		//Out.ar(out, In.ar(gbus, 2));
+		Out.ar(out, (amp * In.ar(gbus, 2)) + (passthrough * In.ar(2, 1) ! 2));
 	}
-).play;
+).play(s, [\in, 2, \out, 0, \gbus, ~granulatorb, \amp, 1.0, \passthrough, 0.0], \addToTail);
 
 
 )
 
-~frippbuffer.plot;
-~grainout.plot;
+~mixer.start
 
 
-~granulator.set("rate",0.4)
-
-~filter.set("freq", 10000)
-~filter.set("amp", 1)
+~granulatorb.scope
 
 
-~fripbuffer.free;
 
 
 
@@ -243,7 +251,7 @@ OSCdef.new(
 	\bufferpassthrough,
 	{
 		| msg |
-		~passthrough.set("amp", msg[1]);
+		~mixer.set("passthrough", msg[1]);
 	},
 	'/buffer/passthrough'
 );
