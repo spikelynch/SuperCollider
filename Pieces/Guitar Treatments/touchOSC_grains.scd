@@ -9,10 +9,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
-
-~frippbuffer.plot;
-
-
 (
 
 ~buflength = 4.0;
@@ -119,11 +115,11 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 ~filter = SynthDef(
 	\outputfilt,
- 	{
- 		arg in=2, out=0, mix=0.0, freq=400, rq=0.5, amp=0.5;
- 		//Out.ar(out, RLPF.ar(In.ar(in, 2), freq, rq, amp));
- 		Out.ar(out, In.ar(in, 2));
- }).play(s, [\in, ~grainout, \out, 0]);
+	{
+		arg in=2, out=0, mix=0.0, freq=400, rq=0.5, amp=0.5;
+		//Out.ar(out, RLPF.ar(In.ar(in, 2), freq, rq, amp));
+		Out.ar(out, In.ar(in, 2));
+}).play(s, [\in, ~grainout, \out, 0]);
 
 ~passthrough = SynthDef(
 	\passthrough_synth,
@@ -251,16 +247,6 @@ OSCdef.new(
 	},
 	'/buffer/passthrough'
 );
-
-OSCdef.new(
-	\bufferfeedback,
-	{
-		| msg |
-		~frippmixer.set("feedback", msg[1]);
-	},
-	'/buffer/feedback'
-);
-
 
 
 // buffer record on/off
