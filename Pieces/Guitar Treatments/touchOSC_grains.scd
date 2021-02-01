@@ -29,17 +29,20 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 ~frippbuffer = Buffer.alloc(s, s.sampleRate * ~buflength, 1);
 
 
-// todo: feedback (play some of the granulator back into the buffer)
+// done: feedback (play some of the granulator back into the buffer) (no good)
 
 // out isn't used for anything her
 
 ~bufrecorder = SynthDef(
 	\fripp_record,
 	{
-		arg in = 2, out = 0, buffer = 0, mix = 0.25, record = 0.0;
-		RecordBuf.ar(record * In.ar(in, 1), buffer, 0, mix, 1 - mix, loop: 1)
+		arg in = 2, fb = 4, out = 0, buffer = 0, mix = 0.25, record = 0.0, feedback = 0.0;
+		var insig, fbsig;
+		insig = record * In.ar(in, 1);
+		fbsig = feedback * Mix.ar(In.ar(fb, 2));
+		RecordBuf.ar(insig + fbsig, buffer, 0, mix, 1 - mix, loop: 1)
     }
-).play(s, [\out, 0, \buffer, ~frippbuffer]);
+).play(s, [\in, 2, \fb, ~granulatorb, \out, 0, \buffer, ~frippbuffer]);
 
 
 
@@ -109,7 +112,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // todo - different styles of trigger
 
-
+// todo - make rate hop around different powers of two
 
 ~granulator = SynthDef(
 	\grainsynth,
@@ -246,6 +249,16 @@ OSCdef.new(
 	},
 	'/buffer/mix'
 );
+
+OSCdef.new(
+	\bufferfeedback,
+	{
+		| msg |
+		~bufrecorder.set("feedback", msg[1]);
+	},
+	'/buffer/feedback'
+);
+
 
 OSCdef.new(
 	\bufferpassthrough,
