@@ -22,9 +22,14 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 ~granulatorb = Bus.audio(s, 2);
 
-
+// default control values
 
 ~buflength = 4.0;
+~defaultmix = 0.25;
+~defaultfeedback = 0.0;
+~defaultpassthrough = 0.25;
+~defaultfreq = 10000;
+~defaultres = 0.3;
 
 
 ~frippbuffer = Buffer.alloc(s, s.sampleRate * ~buflength, 1);
@@ -142,10 +147,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 )
 
-~mixer.start
-
-
-~granulatorb.scope
 
 
 
@@ -155,7 +156,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
-OSCdef.freeAll;
 
 
 // set up TouchOSC controls
@@ -180,9 +180,17 @@ OSCdef.freeAll;
 // buffer/clear -> clear buffer
 
 
+
+
 (
 
+~controller = NetAddr("192.168.0.66", 9000);
+
+
+// set callbacks on the controls
+
 // grain XY control
+
 
 OSCdef.new(
 	\grainxy,
@@ -198,10 +206,6 @@ OSCdef.new(
 
 // granulator mode radio-buttons
 
-
-
-
-
 ~setmode = {
 	| msg, ctrlsynth, ctrlbus |
 	if(msg[1] > 0.0, {
@@ -212,16 +216,22 @@ OSCdef.new(
 	}, {});
 };
 
-
-
 OSCdef.new(\grainmodesaw,      { |msg| ~setmode.value(msg, ~grainsaw, ~grainsawb) }, '/grains/mode/5/1');
 OSCdef.new(\grainmodereverse,  { |msg| ~setmode.value(msg, ~grainreverse, ~grainreverseb) }, '/grains/mode/4/1');
 OSCdef.new(\grainmodesine,     { |msg| ~setmode.value(msg, ~grainsin, ~grainsinb) }, '/grains/mode/3/1');
 OSCdef.new(\grainmodetri,      { |msg| ~setmode.value(msg, ~graintri, ~graintrib) }, '/grains/mode/2/1');
 OSCdef.new(\grainmoderand,     { |msg| ~setmode.value(msg, ~grainrand, ~grainrandb) }, '/grains/mode/1/1');
 
+// set default and send to controls
+
+~setmode.value([ '', 1.0 ], ~grainsaw, ~grainsawb);
+~controller.sendMsg('/grains/mode/5/1', 1.0);
+
+
 
 // set buffer length - you need to clear the buffer to apply
+
+~controller.sendMsg('/buffer/length', ~buflength);
 
 OSCdef.new(
 	\bufferlen,
@@ -234,8 +244,10 @@ OSCdef.new(
 );
 
 
-
 // buffer recording mix
+
+~controller.sendMsg('/buffer/mix', ~defaultmix);
+~bufrecorder.set("mix", ~defaultmix);
 
 OSCdef.new(
 	\buffermix,
@@ -246,6 +258,9 @@ OSCdef.new(
 	'/buffer/mix'
 );
 
+~controller.sendMsg('/buffer/feedback', ~defaultfeedback);
+~bufrecorder.set("feedback", ~defaultfeedback);
+
 OSCdef.new(
 	\bufferfeedback,
 	{
@@ -254,6 +269,9 @@ OSCdef.new(
 	},
 	'/buffer/feedback'
 );
+
+~controller.sendMsg('/buffer/passthrough', ~defaultpassthrough);
+~bufrecorder.set("passthrough", ~defaultpassthrough);
 
 
 OSCdef.new(
@@ -267,6 +285,9 @@ OSCdef.new(
 
 
 // buffer record on/off
+
+~controller.sendMsg('/buffer/record', 0.0);
+
 
 OSCdef.new(
 	\bufferrecord,
@@ -300,6 +321,10 @@ OSCdef.new(
 
 // filter
 
+~controller.sendMsg('/fx/freq', ~defaultfreq);
+~granulator.set("freq", ~defaultfreq);
+
+
 OSCdef.new(
 	\fxfreq,
 	{
@@ -308,6 +333,10 @@ OSCdef.new(
 	},
 	'/fx/freq'
 );
+
+~controller.sendMsg('/fx/rq', ~defaultres);
+~granulator.set("rq", ~defaultres);
+
 
 OSCdef.new(
 	\fxrq,
@@ -322,7 +351,4 @@ OSCdef.new(
 )
 
 
-~adrs = NetAddr("192.168.0.66", 9000)
-
-~adrs.sendMsg("/grains/mode/1/1", 1.0)
 
