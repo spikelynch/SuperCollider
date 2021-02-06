@@ -10,6 +10,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
+
 (
 
 // audio buses
@@ -128,13 +129,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 	}
 ).play(s, [\out, ~granulatorb, \buffer, ~frippbuffer, \posb, ~grainsawb]);
 
-// ~filter = SynthDef(
-// 	\outputfilt,
-// 	{
-// 		arg in=2, out=0, mix=0.0, freq=400, rq=0.5, amp=0.5;
-// 		//Out.ar(out, RLPF.ar(In.ar(in, 2), freq, rq, amp));
-// 		Out.ar(out, In.ar(in, 2));
-// }).play(s, [\in, ~grainout, \out, 0]);
 
 ~mixer = SynthDef(
 	\mixer_synth,
@@ -152,6 +146,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 ~granulatorb.scope
+
 
 
 
@@ -193,7 +188,8 @@ OSCdef.new(
 	\grainxy,
 	{
 		| msg |
-		~currentspeed = msg[2].linlin(0, 1, 0, 1);
+		~currentspeed = msg[2].linlin(0, 1, 0, 2) / ~buflength;
+		~currentspeed.postln;
 		~currentpos.set("speed", ~currentspeed);
 		~granulator.set("trate", msg[1].linlin(0, 1, 1, 200));
 	},
@@ -326,7 +322,7 @@ OSCdef.new(
 )
 
 
-~adrs = NetAddr("192.168.0.85", 9000)
+~adrs = NetAddr("192.168.0.66", 9000)
 
 ~adrs.sendMsg("/grains/mode/1/1", 1.0)
 
