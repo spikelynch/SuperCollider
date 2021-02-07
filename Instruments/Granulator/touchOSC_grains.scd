@@ -31,6 +31,9 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 ~defaulttrig = 100;
 ~defaultspeed = 1;
+~defaultpitch = 0; // this is the control value, not synth value
+
+~pitchrange = 3;  // this is octaves + or -
 
 ~defaultmix = 0.25;
 ~defaultfeedback = 0.0;
@@ -171,14 +174,15 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // grains/grainxy -> grain speed, grain size
 // grains/mode -> grainulator curve
-// grains/rate -> [TODO] gra
+// grains/pitch -> pitch bender
 
 // buffer/length -> length of buffer
 // buffer/mix -> strength of buffer feedback
 // buffer/record -> toggle whether buffer is recording
 // buffer/clear -> clear buffer
 
-
+// fx/freq -> filter cutoff
+// fx/rq -> filter resonance
 
 
 (
@@ -231,6 +235,23 @@ OSCdef.new(\grainmoderand,     { |msg| ~setmode.value(msg, ~grainrand, ~grainran
 ~setmode.value([ '', 1.0 ], ~grainsaw, ~grainsawb);
 ~controller.sendMsg('/grains/mode/5/1', 1.0);
 
+
+
+// granulator pitch control
+// at the moment normalises to octaves
+
+~controller.sendMsg('/grains/pitch', ~defaultpitch);
+// default granulator rate (pitch) is already 1
+
+OSCdef.new(
+	\grainspitch,
+	{
+		| msg |
+		var qrate = 2.pow((~pitchrange * msg[1] + 0.5).floor);
+		~granulator.set("rate", qrate);
+	},
+	'/grains/pitch'
+);
 
 
 // set buffer length - you need to clear the buffer to apply
@@ -356,3 +377,7 @@ OSCdef.new(
 
 
 
+x = 0.2;
+(x + 0.5).floor;
+
+	x = -1;
