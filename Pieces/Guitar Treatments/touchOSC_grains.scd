@@ -25,6 +25,13 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 // default control values
 
 ~buflength = 4.0;
+
+~mintrig = 1.0;
+~maxtrig = 200;
+
+~defaulttrig = 100;
+~defaultspeed = 1;
+
 ~defaultmix = 0.25;
 ~defaultfeedback = 0.0;
 ~defaultpassthrough = 0.25;
@@ -192,14 +199,20 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 // grain XY control
 
 
+
+
+~controller.sendMsg('/grains/grainxy', ~defaulttrig.linlin(~mintrig, ~maxtrig, 0, 1), ~defaultspeed);
+~currentpos.set("speed", ~defaultspeed);
+~granulator.set("trate", ~defaulttrig);
+
 OSCdef.new(
 	\grainxy,
 	{
 		| msg |
+		msg.postln;
 		~currentspeed = msg[2].linlin(0, 1, 0, 2) / ~buflength;
-		~currentspeed.postln;
 		~currentpos.set("speed", ~currentspeed);
-		~granulator.set("trate", msg[1].linlin(0, 1, 1, 200));
+		~granulator.set("trate", msg[1].linlin(0, 1, ~mintrig, ~maxtrig));
 	},
 	'/grains/grainxy'
 );
