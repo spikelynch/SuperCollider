@@ -167,14 +167,6 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // set up TouchOSC controls
 
-
-// things to do later on -
-// figure out how to send values from SuperCollider to the TouchOSC interface
-// so that this code can set default values on the controls
-// - see the touchOSC SC example at https://hexler.net/pub/touchosc/touchosc-simple.scd for how to do this
-
-//
-
 // touchosc controls
 
 // grains/grainxy -> grain speed, grain size
@@ -209,7 +201,6 @@ OSCdef.new(
 	\grainxy,
 	{
 		| msg |
-		msg.postln;
 		~currentspeed = msg[2].linlin(0, 1, 0, 2) / ~buflength;
 		~currentpos.set("speed", ~currentspeed);
 		~granulator.set("trate", msg[1].linlin(0, 1, ~mintrig, ~maxtrig));
