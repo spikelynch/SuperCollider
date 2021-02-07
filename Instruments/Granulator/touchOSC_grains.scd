@@ -5,7 +5,7 @@
 Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
-
+{ var freq = 1000; [LFNoise0.ar(freq), Impulse.ar(freq)] }.plot
 
 
 
@@ -35,9 +35,11 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 ~pitchrange = 3;  // this is octaves + or -
 
+
 ~defaultmix = 0.25;
 ~defaultfeedback = 0.0;
-~defaultpassthrough = 0.25;
+~defaultgrainamp = 0.5;
+~defaultpassthrough = 0.5;
 ~defaultfreq = 10000;
 ~defaultres = 0.3;
 
@@ -58,7 +60,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 		fbsig = feedback * Mix.ar(In.ar(fb, 2));
 		RecordBuf.ar(insig + fbsig, buffer, 0, mix, 1 - mix, loop: 1)
     }
-).play(s, [\in, 2, \fb, ~granulatorb, \out, 0, \buffer, ~frippbuffer]);
+).play(s, [\in, 2, \record, 1.0, \fb, ~granulatorb, \out, 0, \buffer, ~frippbuffer]);
 
 
 
@@ -133,14 +135,16 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 ~granulator = SynthDef(
 	\grainsynth,
 	{
-		arg out=0, trate=120, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, buffer;
-		var dur, blen, clk, pos, pan;
+		arg out=0, trate=120, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, sweep=0.25, chorus=0.0, buffer;
+		var dur, blen, clk, chor, pos, pan, grains;
 		dur = 12 / trate;
 		clk = Impulse.kr(trate);
+		chor = chorus * 2.pow((LFNoise0.kr(trate * 0.25) + 0.5).floor) + (1 - chorus);
 		blen = BufDur.kr(buffer);
-		pos = In.kr(posb, 1) * blen;
-		pan = WhiteNoise.kr(0.6);
-		Out.ar(out, RLPF.ar(TGrains.ar(2, clk, buffer, rate, pos, dur, pan, amp), freq,rq));
+		pos = In.kr(posb, 1);
+		pan = WhiteNoise.kr(1 - sweep) + (2 * sweep * (pos - 1));
+		grains = TGrains.ar(2, clk, buffer, chor * rate, pos * blen, dur, pan, amp);
+		Out.ar(out, RLPF.ar(grains, freq,rq));
 	}
 ).play(s, [\out, ~granulatorb, \buffer, ~frippbuffer, \posb, ~grainsawb]);
 
@@ -185,6 +189,8 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 // fx/rq -> filter resonance
 
 
+
+
 (
 
 ~controller = NetAddr("192.168.0.66", 9000);
@@ -198,15 +204,15 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 ~controller.sendMsg('/grains/grainxy', ~defaulttrig.linlin(~mintrig, ~maxtrig, 0, 1), ~defaultspeed);
-~currentpos.set("speed", ~defaultspeed);
+~currentpos.set("speed", ~defaultspeed / ~buflength);
 ~granulator.set("trate", ~defaulttrig);
 
 OSCdef.new(
 	\grainxy,
 	{
 		| msg |
-		~currentspeed = msg[2].linlin(0, 1, 0, 2) / ~buflength;
-		~currentpos.set("speed", ~currentspeed);
+		~currentspeed = msg[2].linlin(0, 1, 0, 2);
+		~currentpos.set("speed", ~currentspeed / ~buflength);
 		~granulator.set("trate", msg[1].linlin(0, 1, ~mintrig, ~maxtrig));
 	},
 	'/grains/grainxy'
@@ -254,6 +260,21 @@ OSCdef.new(
 );
 
 
+// chorus on/off
+
+~controller.sendMsg('/grains/chorus', 0.0);
+
+OSCdef.new(
+	\grainschorus,
+	{
+		| msg |
+		~granulator.set("chorus", msg[1]);
+	},
+	'/grains/chorus'
+);
+
+
+
 // set buffer length - you need to clear the buffer to apply
 
 ~controller.sendMsg('/buffer/length', ~buflength);
@@ -295,9 +316,21 @@ OSCdef.new(
 	'/buffer/feedback'
 );
 
-~controller.sendMsg('/buffer/passthrough', ~defaultpassthrough);
-~bufrecorder.set("passthrough", ~defaultpassthrough);
+~controller.sendMsg('/buffer/grains', ~defaultgrainamp);
+~granulator.set("amp", ~defaultgrainamp);
 
+OSCdef.new(
+	\buffergrains,
+	{
+		| msg |
+		~granulator.set("amp", msg[1]);
+	},
+	'/buffer/grains'
+);
+
+
+~controller.sendMsg('/buffer/passthrough', ~defaultpassthrough);
+~mixer.set("passthrough", ~defaultpassthrough);
 
 OSCdef.new(
 	\bufferpassthrough,
@@ -311,8 +344,8 @@ OSCdef.new(
 
 // buffer record on/off
 
-~controller.sendMsg('/buffer/record', 0.0);
-
+~controller.sendMsg('/buffer/record', 1.0);
+~bufrecords.set("record", 1.0);
 
 OSCdef.new(
 	\bufferrecord,
@@ -330,16 +363,12 @@ OSCdef.new(
 	{
 		| msg |
 		~bufclear = msg[1];
-		[ "clearing buffer", ~bufclear ].postln;
-		[ "old buffer = ", ~frippbuffer ].postln;
 		~newbuffer = Buffer.alloc(s, s.sampleRate * ~buflength, 1);
-		[ "new buffer = ", ~newbuffer ].postln;
 		~granulator.set("buffer", ~newbuffer);
 		~bufrecorder.set("buffer", ~newbuffer);
 		~frippbuffer.free;
 		~frippbuffer = ~newbuffer;
-		[ "~frippbuffer = ", ~frippbuffer ].postln;
-
+		~currentpos.set("speed", ~currentspeed / ~buflength);
 	},
 	'/buffer/clear'
 );
