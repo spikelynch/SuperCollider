@@ -43,6 +43,12 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 ~defaultfreq = 10000;
 ~defaultres = 0.3;
 
+~minlfofreq = 0.01;
+~maxlfofreq = 10;
+
+~defaultlfofreq = 0.5;
+~defaultlfoamp = 0;
+
 
 ~frippbuffer = Buffer.alloc(s, s.sampleRate * ~buflength, 1);
 
@@ -127,6 +133,17 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
+~lfob = Bus.control(s, 1);
+
+~lfo = SynthDef(
+	\lfo,
+	{
+		arg out=5, freq=1, amp=0;
+		Out.kr(out, SinOsc.kr(freq, 0, amp));
+	}
+).play(s, [\out, ~lfob, \freq, 1, \amp, 0]);
+
+
 
 // todo - different styles of trigger
 
@@ -135,18 +152,19 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 ~granulator = SynthDef(
 	\grainsynth,
 	{
-		arg out=0, trate=120, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, sweep=0.25, chorus=0.0, buffer;
-		var dur, blen, clk, chor, pos, pan, grains;
+		arg out=0, modb, trate=120, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, sweep=0.25, chorus=0.0, buffer;
+		var dur, blen, clk, chor, pos, pan, grains, filtfreq;
 		dur = 12 / trate;
 		clk = Impulse.kr(trate);
-		chor = chorus * 2.pow((LFNoise0.kr(trate * 0.25) + 0.5).floor) + (1 - chorus);
+		chor = chorus * 2.pow((LFNoise0.kr(trate) + 0.5).floor) + (1 - chorus);
 		blen = BufDur.kr(buffer);
 		pos = In.kr(posb, 1);
 		pan = WhiteNoise.kr(1 - sweep) + (2 * sweep * (pos - 1));
+		filtfreq = (In.kr(modb, 1) * freq * 0.5) + freq;
 		grains = TGrains.ar(2, clk, buffer, chor * rate, pos * blen, dur, pan, amp);
-		Out.ar(out, RLPF.ar(grains, freq,rq));
+		Out.ar(out, RLPF.ar(grains, filtfreq, rq));
 	}
-).play(s, [\out, ~granulatorb, \buffer, ~frippbuffer, \posb, ~grainsawb]);
+).play(s, [\out, ~granulatorb, \buffer, ~frippbuffer, \posb, ~grainsawb, \modb, ~lfob]);
 
 
 ~mixer = SynthDef(
@@ -203,7 +221,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
-~controller.sendMsg('/grains/grainxy', ~defaulttrig.linlin(~mintrig, ~maxtrig, 0, 1), ~defaultspeed);
+~controller.sendMsg('/grains/grainxy', [ ~defaulttrig.linlin(~mintrig, ~maxtrig, 0, 1), ~defaultspeed ]);
 ~currentpos.set("speed", ~defaultspeed / ~buflength);
 ~granulator.set("trate", ~defaulttrig);
 
@@ -378,7 +396,6 @@ OSCdef.new(
 ~controller.sendMsg('/fx/freq', ~defaultfreq);
 ~granulator.set("freq", ~defaultfreq);
 
-
 OSCdef.new(
 	\fxfreq,
 	{
@@ -391,7 +408,6 @@ OSCdef.new(
 ~controller.sendMsg('/fx/rq', ~defaultres);
 ~granulator.set("rq", ~defaultres);
 
-
 OSCdef.new(
 	\fxrq,
 	{
@@ -400,6 +416,34 @@ OSCdef.new(
 	},
 	'/fx/rq'
 );
+
+~controller.sendMsg('/fx/lfofreq', ~defaultlfofreq.explin(~minlfofreq, ~maxlfofreq, 0, 1));
+~lfo.set("freq", ~defaultlfofreq);
+
+OSCdef.new(
+	\fxlfofreq,
+	{
+		| msg |
+		var freq = msg[1].linexp(0, 1, ~minlfofreq, ~maxlfofreq);
+		freq.postln;
+		~lfo.set("freq", freq);
+	},
+	'/fx/lfofreq'
+);
+
+~controller.sendMsg('/fx/lfoamp', ~defaultlfoamp);
+~lfo.set("amp", ~defaultlfoamp);
+
+OSCdef.new(
+	\fxlfoamp,
+	{
+		| msg |
+		~lfo.set("amp", msg[1]);
+	},
+	'/fx/lfoamp'
+);
+
+
 
 
 )
