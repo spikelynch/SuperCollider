@@ -15,7 +15,7 @@ Test things like really rapid playback
 
 Pitch-shifting (tuned and untuned)
 
-LFO Modulate the filter
+LFO Modulate the filter <-- done
 
 LFO Modulate the granulator settings
 

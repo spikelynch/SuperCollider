@@ -5,9 +5,6 @@
 Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
-{ var freq = 1000; [LFNoise0.ar(freq), Impulse.ar(freq)] }.plot
-
-
 
 
 
@@ -29,7 +26,11 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 ~mintrig = 1.0;
 ~maxtrig = 200;
 
+~minsize = 1;
+~maxsize = 80;
+
 ~defaulttrig = 100;
+~defaultsize = 12;
 ~defaultspeed = 1;
 ~defaultpitch = 0; // this is the control value, not synth value
 
@@ -133,6 +134,7 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 
 
+
 ~lfob = Bus.control(s, 1);
 
 ~lfo = SynthDef(
@@ -147,15 +149,18 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 
 // todo - different styles of trigger
 
-// todo - make rate hop around different powers of two
+
+
+
+
 
 ~granulator = SynthDef(
 	\grainsynth,
 	{
-		arg out=0, modb, trate=120, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, sweep=0.25, chorus=0.0, buffer;
+		arg out=0, modb, trate=120, size=12, rate=1, posb=5, amp=1.0, freq=10000, rq=0.3, sweep=0.25, chorus=0.0, dust = 0, buffer;
 		var dur, blen, clk, chor, pos, pan, grains, filtfreq;
-		dur = 12 / trate;
-		clk = Impulse.kr(trate);
+		dur = size / trate;
+		clk = (Impulse.kr(trate) * (1 - dust)) + (Dust.kr(trate) * dust);
 		chor = chorus * 2.pow((LFNoise0.kr(trate) + 0.5).floor) + (1 - chorus);
 		blen = BufDur.kr(buffer);
 		pos = In.kr(posb, 1);
@@ -180,9 +185,23 @@ Server.default.options.inDevice_("Scarlett 2i2 USB");
 )
 
 
+// functions for saving and loading
 
-
-
+// ~str = "hello"
+//
+// ~str ++ "foo"
+//
+// (
+//
+// ~savepatch = {
+// 	| slot |
+// 	var fname = 'granulator_' ++ slot ++ '.txt', fhandle;
+// 	fhandle = File(fname, "w");
+// 	f.write("This was written to slot" ++ slot);
+// }
+//
+//
+// )
 
 
 
@@ -236,6 +255,23 @@ OSCdef.new(
 	'/grains/grainxy'
 );
 
+// grain size: dur = size / trate
+
+~controller.sendMsg('/grains/size', ~defaultsize.linlin(~minsize, ~maxsize, 0, 1));
+~granulator.set("size", ~defaultsize);
+
+OSCdef.new(
+	\grainssize,
+	{
+		| msg |
+		var size = msg[1].linlin(0, 1, ~minsize, ~maxsize);
+		~granulator.set("size", size);
+	},
+	'/grains/size'
+);
+
+
+
 // granulator mode radio-buttons
 
 ~setmode = {
@@ -277,6 +313,20 @@ OSCdef.new(
 	'/grains/pitch'
 );
 
+// backwards grains on/off
+
+~controller.sendMsg('/grains/back', 0.0);
+
+OSCdef.new(
+	\grainsback,
+	{
+		| msg |
+		~granulator.set("rate", -1 + (2 * msg[1]));
+	},
+	'/grains/back'
+);
+
+
 
 // chorus on/off
 
@@ -292,6 +342,19 @@ OSCdef.new(
 );
 
 
+// dust (random) trigger on/off
+
+~controller.sendMsg('/grains/dust', 0.0);
+
+OSCdef.new(
+	\grainsdust,
+	{
+		| msg |
+		~granulator.set("dust", msg[1]);
+	},
+	'/grains/dust'
+);
+
 
 // set buffer length - you need to clear the buffer to apply
 
@@ -302,7 +365,6 @@ OSCdef.new(
 	{
 		| msg |
 		~buflength = msg[1];
-		~buflength.postln;
 	},
 	'/buffer/length'
 );
@@ -425,7 +487,6 @@ OSCdef.new(
 	{
 		| msg |
 		var freq = msg[1].linexp(0, 1, ~minlfofreq, ~maxlfofreq);
-		freq.postln;
 		~lfo.set("freq", freq);
 	},
 	'/fx/lfofreq'
@@ -444,13 +505,26 @@ OSCdef.new(
 );
 
 
+OSCdef.new(
+	\patchsave,
+	{
+		| msg |
+		"save patch".postln;
+		msg.postln;
+	},
+	'/patch/save'
+);
+
+OSCdef.new(
+	\patchload,
+	{
+		| msg |
+		"load patch".postln;
+		msg.postln;
+	},
+	'/patch/load'
+);
 
 
 )
 
-
-
-x = 0.2;
-(x + 0.5).floor;
-
-	x = -1;
